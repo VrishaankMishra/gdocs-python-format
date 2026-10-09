@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    :root {
+      --fg: #202124;
+      --muted: #5f6368;
+      --line: #dadce0;
+      --accent: #1a73e8;
+      --ok-bg: #e6f4ea;
+      --ok-fg: #137333;
+      --err-bg: #fce8e6;
+      --err-fg: #c5221f;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font: 13px/1.5 Roboto, Arial, sans-serif;
+      color: var(--fg);
+      margin: 0;
+      padding: 14px;
+    }
+    h2 { font-size: 13px; font-weight: 500; margin: 0 0 4px; }
+    p.hint { color: var(--muted); font-size: 11px; margin: 0 0 14px; }
+    fieldset { border: 0; padding: 0; margin: 0 0 14px; }
+    label.row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 8px; margin-bottom: 9px;
+    }
+    label.row span { flex: 1; }
+    label.check {
+      display: flex; align-items: center; gap: 7px; margin-bottom: 9px;
+      cursor: pointer;
+    }
+    select, input[type=number] {
+      font: inherit; padding: 4px 5px;
+      border: 1px solid var(--line); border-radius: 4px;
+      background: #fff; min-width: 108px;
+    }
+    input[type=number] { width: 68px; min-width: 0; }
+    button {
+      font: inherit; width: 100%; padding: 9px;
+      border-radius: 4px; cursor: pointer; margin-bottom: 7px;
+    }
+    button.primary { background: var(--accent); color: #fff; border: 1px solid var(--accent); }
+    button.primary:hover:not(:disabled) { background: #1765cc; }
+    button.secondary { background: #fff; color: var(--accent); border: 1px solid var(--line); }
+    button:disabled { opacity: .55; cursor: default; }
+    #status {
+      display: none; font-size: 12px; padding: 8px 9px;
+      border-radius: 4px; margin-bottom: 12px;
+    }
+    #status.ok  { display: block; background: var(--ok-bg);  color: var(--ok-fg); }
+    #status.err { display: block; background: var(--err-bg); color: var(--err-fg); }
+    hr { border: 0; border-top: 1px solid var(--line); margin: 14px 0; }
+    .foot { color: var(--muted); font-size: 11px; }
+    .foot code { background: #f1f3f4; padding: 1px 3px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <h2>Format selection as Python</h2>
+  <p class="hint">
+    Select code in the document, then click Format. Whole lines are formatted,
+    so a partial selection still styles the full line.
+  </p>
+
+  <div id="status"></div>
+
+  <fieldset id="controls">
+    <label class="row">
+      <span>Theme</span>
+      <select id="theme"></select>
+    </label>
+    <label class="row">
+      <span>Font</span>
+      <select id="font">
+        <option value="Courier New">Courier New</option>
+        <option value="Roboto Mono">Roboto Mono</option>
+        <option value="Consolas">Consolas</option>
+      </select>
+    </label>
+    <label class="row">
+      <span>Size (pt)</span>
+      <input type="number" id="fontSize" min="6" max="24" step="1">
+    </label>
+    <label class="row">
+      <span>Indent (pt)</span>
+      <input type="number" id="indentPt" min="0" max="144" step="6">
+    </label>
+
+    <label class="check"><input type="checkbox" id="background"> Shaded background</label>
+    <label class="check"><input type="checkbox" id="lineNumbers"> Line numbers</label>
+    <label class="check"><input type="checkbox" id="padLines"> Pad lines to equal width</label>
+  </fieldset>
+
+  <button class="primary"   id="formatBtn">Format selection</button>
+  <button class="secondary" id="clearBtn">Clear code formatting</button>
+
+  <hr>
+  <p class="foot">
+    Turn off <strong>Tools &rsaquo; Preferences &rsaquo; Use smart quotes</strong> so Docs
+    stops rewriting <code>"</code> as <code>&rdquo;</code> in your code.
+  </p>
+
+<script>
+  var FIELDS = ['theme', 'font', 'fontSize', 'indentPt', 'background', 'lineNumbers', 'padLines'];
+  var busy = false;
+
+  function el(id) { return document.getElementById(id); }
+
+  function setStatus(message, isError) {
+    var box = el('status');
+    box.textContent = message;
+    box.className = isError ? 'err' : 'ok';
+  }
+
+  function setBusy(state) {
+    busy = state;
+    el('formatBtn').disabled = state;
+    el('clearBtn').disabled = state;
+  }
+
+  function readForm() {
+    return {
+      theme: el('theme').value,
+      font: el('font').value,
+      fontSize: Number(el('fontSize').value),
+      indentPt: Number(el('indentPt').value),
+      background: el('background').checked,
+      lineNumbers: el('lineNumbers').checked,
+      padLines: el('padLines').checked
+    };
+  }
+
+  function writeForm(prefs) {
+    el('theme').value = prefs.theme;
+    el('font').value = prefs.font;
+    el('fontSize').value = prefs.fontSize;
+    el('indentPt').value = prefs.indentPt;
+    el('background').checked = !!prefs.background;
+    el('lineNumbers').checked = !!prefs.lineNumbers;
+    el('padLines').checked = !!prefs.padLines;
+  }
+
+  function persist() {
+    google.script.run.savePrefs(readForm());
+  }
+
+  function run(fnName) {
+    if (busy) return;
+    setBusy(true);
+    setStatus('Working…', false);
+    google.script.run
+      .withSuccessHandler(function (result) {
+        setBusy(false);
+        setStatus(result.message, !result.ok);
+      })
+      .withFailureHandler(function (err) {
+        setBusy(false);
+        setStatus(err && err.message ? err.message : String(err), true);
+      })
+      [fnName]();
+  }
+
+  google.script.run
+    .withSuccessHandler(function (themes) {
+      var select = el('theme');
+      themes.forEach(function (t) {
+        var option = document.createElement('option');
+        option.value = t.key;
+        option.textContent = t.label;
+        select.appendChild(option);
+      });
+      google.script.run.withSuccessHandler(function (prefs) {
+        writeForm(prefs);
+        FIELDS.forEach(function (id) { el(id).addEventListener('change', persist); });
+      }).getPrefs();
+    })
+    .getThemeList();
+
+  el('formatBtn').addEventListener('click', function () {
+    run('formatSelection', readForm());
+  });
+
+  el('clearBtn').addEventListener('click', function () {
+    run('clearCodeFormatting');
+  });
+</script>
+</body>
+</html>

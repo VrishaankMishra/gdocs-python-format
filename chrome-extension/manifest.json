@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Python Format for Google Docs",
+  "version": "1.0.0",
+  "description": "Clean up and syntax-highlight Python, then paste it into Google Docs as a formatted code block.",
+  "permissions": ["sidePanel", "clipboardRead", "storage"],
+  "action": {
+    "default_title": "Python Format"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

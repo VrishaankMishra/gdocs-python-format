@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Python Format</title>
+  <link rel="stylesheet" href="sidepanel.css">
+</head>
+<body>
+  <header>
+    <h1>Python Format</h1>
+    <p class="hint">
+      Copy your code from the doc (<kbd>Ctrl</kbd>+<kbd>C</kbd>), paste it below,
+      then <strong>Copy formatted</strong> and paste back over your selection.
+    </p>
+  </header>
+
+  <section>
+    <div class="row">
+      <label for="input">Input</label>
+      <button id="readClipboard" class="link" type="button">Read clipboard</button>
+    </div>
+    <textarea id="input" spellcheck="false" placeholder="Paste Python here…"></textarea>
+  </section>
+
+  <section>
+    <div class="grid">
+      <label>Theme
+        <select id="theme"></select>
+      </label>
+      <label>Font
+        <select id="font">
+          <option value="Courier New">Courier New</option>
+          <option value="Roboto Mono">Roboto Mono</option>
+          <option value="Consolas">Consolas</option>
+        </select>
+      </label>
+      <label>Size (pt)
+        <input id="fontSize" type="number" min="6" max="24" step="1">
+      </label>
+    </div>
+    <div class="checks">
+      <label><input id="background"  type="checkbox"> Shaded background</label>
+      <label><input id="lineNumbers" type="checkbox"> Line numbers</label>
+      <label><input id="padLines"    type="checkbox"> Pad to equal width</label>
+      <label><input id="dedent"      type="checkbox"> Remove common indent</label>
+    </div>
+  </section>
+
+  <section>
+    <div class="row">
+      <label>Preview</label>
+      <span id="stats" class="stats"></span>
+    </div>
+    <div id="preview" class="preview"></div>
+    <p id="repairs" class="repairs"></p>
+  </section>
+
+  <footer>
+    <button id="copyRich"  class="primary"   type="button">Copy formatted (for Google Docs)</button>
+    <button id="copyPlain" class="secondary" type="button">Copy plain Python</button>
+    <button id="download"  class="secondary" type="button">Download .py</button>
+    <div id="status" class="status"></div>
+    <p class="note">
+      A Chrome extension cannot write into a Google Doc — Docs draws its text on
+      a canvas. <strong>Copy formatted</strong> puts styled rich text on your
+      clipboard instead, so pasting over your selection replaces it with the
+      formatted block. For in-place formatting with no copy/paste, use the
+      Apps Script add-on.
+    </p>
+  </footer>
+
+  <script src="python.js"></script>
+  <script src="format.js"></script>
+  <script src="sidepanel.js"></script>
+</body>
+</html>
